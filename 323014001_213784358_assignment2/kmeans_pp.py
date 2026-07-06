@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+import pandas as pd
 # import mykmeanssp
 
 def euclidean_distance(p, q):
@@ -9,31 +10,22 @@ def euclidean_distance(p, q):
     return sum_sq ** 0.5
 
 def read_points_file(path):
-    data = {}
     try:
-        with open(path, "r") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                parts = line.split(",")
-                key = float(parts[0])
-                features = [float(x) for x in parts[1:]]
-                data[key] = features
+        df = pd.read_csv(path, header=None)
     except Exception:
         print("An Error Has Occurred")
         sys.exit(1)
-    return data
+    return df
 
-def inner_join_and_sort(data1, data2): 
-    common_keys = set(data1.keys()) & set(data2.keys())
-    merged = [(key, data1[key] + data2[key]) for key in common_keys]
-    merged.sort(key=lambda item: item[0])
-
-    keys = [m[0] for m in merged]
-    datapoints = [m[1] for m in merged]
+def inner_join_and_sort(df1, df2): 
+    merged = pd.merge(df1, df2, on=0, how="inner")
+    merged = merged.sort_values(by=0, ascending=True).reset_index(drop=True)
+ 
+    keys = merged[0].tolist()
+    feature_cols = [c for c in merged.columns if c != 0]
+    datapoints = merged[feature_cols].values.tolist()
+ 
     return keys, datapoints
-
     
 def parse_args():
     argv = sys.argv[1:]
@@ -112,19 +104,19 @@ def main():
 
     initial_centroids = [datapoints[i] for i in chosen_indices]
 
-    # # Calling the c module for calc
-    # final_centroids = mykmeanssp.fit(
-    #     k,
-    #     iterations,
-    #     eps,
-    #     initial_centroids,
-    #     datapoints,
-    # )
+    # Calling the c module for calc
+    final_centroids = mykmeanssp.fit(
+        k,
+        iterations,
+        eps,
+        initial_centroids,
+        datapoints,
+    )
 
-    # # Finish
-    # print(",".join(str(int(keys[i])) for i in chosen_indices))
-    # for centroid in final_centroids:
-    #     print(",".join(f"{val:.4f}" for val in centroid))
+    # Finish
+    print(",".join(str(int(keys[i])) for i in chosen_indices))
+    for centroid in final_centroids:
+        print(",".join(f"{val:.4f}" for val in centroid))
 
 
 if __name__ == "__main__":
