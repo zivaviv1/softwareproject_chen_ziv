@@ -1,6 +1,5 @@
 from setuptools import Extension, setup
 
-
 module = Extension(
     "symnmfmodule",
     sources=["symnmfmodule.c", "symnmf.c"],

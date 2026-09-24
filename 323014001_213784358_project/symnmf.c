@@ -9,6 +9,7 @@
 #define LINE_SIZE 8192
 #define BETA 0.5
 
+static int is_blank(const char *line);
 static int parse_values(char *line, double *values, int limit, int *count);
 static int read_shape(FILE *file, int *rows, int *cols);
 static int load_values(FILE *file, Matrix *matrix);
@@ -72,6 +73,14 @@ void matrix_free(Matrix *matrix)
     }
 }
 
+static int is_blank(const char *line)
+{
+    while (isspace((unsigned char)*line)) {
+        line++;
+    }
+    return *line == '\0';
+}
+
 static int parse_values(char *line, double *values, int limit, int *count)
 {
     char *cursor;
@@ -120,6 +129,9 @@ static int read_shape(FILE *file, int *rows, int *cols)
     *rows = 0;
     columns = 0;
     while (fgets(line, sizeof(line), file) != NULL) {
+        if (is_blank(line)) {
+            continue;
+        }
         if (!parse_values(line, NULL, 0, &count)) {
             return 0;
         }
@@ -145,6 +157,9 @@ static int load_values(FILE *file, Matrix *matrix)
 
     row = 0;
     while (fgets(line, sizeof(line), file) != NULL) {
+        if (is_blank(line)) {
+            continue;
+        }
         if (row >= matrix->rows || !parse_values(line,
                 matrix->data + row * matrix->cols, matrix->cols, &count)) {
             return 0;

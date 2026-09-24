@@ -230,10 +230,23 @@ static PyObject *py_norm(PyObject *self, PyObject *args)
 }
 
 static PyMethodDef symnmf_methods[] = {
-    {"symnmf", py_symnmf, METH_VARARGS, "Optimize H."},
-    {"sym", py_sym, METH_VARARGS, "Build similarity."},
-    {"ddg", py_ddg, METH_VARARGS, "Build degree matrix."},
-    {"norm", py_norm, METH_VARARGS, "Build normalized similarity."},
+    {"symnmf", py_symnmf, METH_VARARGS,
+     "symnmf(h, w, max_iter=300, epsilon=0.0001)\n"
+     "Takes the initial H (n x k list of lists), the normalized similarity "
+     "matrix W (n x n list of lists), the maximum number of iterations and "
+     "the convergence epsilon. Returns the optimized H as a list of lists."},
+    {"sym", py_sym, METH_VARARGS,
+     "sym(points)\n"
+     "Takes the data points (n x d list of lists) and returns the n x n "
+     "similarity matrix as a list of lists."},
+    {"ddg", py_ddg, METH_VARARGS,
+     "ddg(points)\n"
+     "Takes the data points (n x d list of lists) and returns the n x n "
+     "diagonal degree matrix as a list of lists."},
+    {"norm", py_norm, METH_VARARGS,
+     "norm(points)\n"
+     "Takes the data points (n x d list of lists) and returns the n x n "
+     "normalized similarity matrix as a list of lists."},
     {NULL, NULL, 0, NULL}
 };
 
