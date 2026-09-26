@@ -15,6 +15,7 @@ static PyObject *matrix_to_py(const Matrix *matrix);
 static PyObject *run_operation(PyObject *args, MatrixOperation operation);
 static PyObject *run_symnmf(PyObject *args);
 
+/* Get the number of rows and columns of a Python list of lists */
 static int matrix_shape(PyObject *outer, Py_ssize_t *rows, Py_ssize_t *cols)
 {
     PyObject *row;
@@ -38,6 +39,7 @@ static int matrix_shape(PyObject *outer, Py_ssize_t *rows, Py_ssize_t *cols)
     return 1;
 }
 
+/* Copies the Python values into the C matrix, checks every row has the same length */
 static int fill_matrix(PyObject *outer, Matrix *matrix)
 {
     PyObject *row;
@@ -71,6 +73,7 @@ static int fill_matrix(PyObject *outer, Matrix *matrix)
     return 1;
 }
 
+/* Converts a Python list of lists into a C Matrix */
 static Matrix *matrix_from_py(PyObject *object)
 {
     PyObject *outer;
@@ -100,6 +103,7 @@ static Matrix *matrix_from_py(PyObject *object)
     return matrix;
 }
 
+/* Converts one row of the matrix into a Python list of floats */
 static PyObject *matrix_row(const Matrix *matrix, int row)
 {
     PyObject *result;
@@ -121,6 +125,7 @@ static PyObject *matrix_row(const Matrix *matrix, int row)
     return result;
 }
 
+/* Converts a C Matrix into a Python list of lists */
 static PyObject *matrix_to_py(const Matrix *matrix)
 {
     PyObject *result;
@@ -142,6 +147,8 @@ static PyObject *matrix_to_py(const Matrix *matrix)
     return result;
 }
 
+/* Shared code for sym/ddg/norm: parse the points, run the operation,
+   return the result as a Python list of lists */
 static PyObject *run_operation(PyObject *args, MatrixOperation operation)
 {
     PyObject *object;
@@ -167,6 +174,7 @@ static PyObject *run_operation(PyObject *args, MatrixOperation operation)
     return result;
 }
 
+/* Parses (H, W, max_iter, epsilon), runs symnmf and returns the final H */
 static PyObject *run_symnmf(PyObject *args)
 {
     PyObject *h_object;
@@ -178,6 +186,7 @@ static PyObject *run_symnmf(PyObject *args)
     int max_iter;
     double epsilon;
 
+    /* defaults in case max_iter and epsilon are not passed */
     max_iter = 300;
     epsilon = 0.0001;
     if (!PyArg_ParseTuple(args, "OO|id", &h_object, &w_object,
@@ -255,7 +264,11 @@ static struct PyModuleDef symnmf_module = {
     "symnmfmodule",
     "SymNMF C extension.",
     -1,
-    symnmf_methods
+    symnmf_methods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
 };
 
 PyMODINIT_FUNC PyInit_symnmfmodule(void)
