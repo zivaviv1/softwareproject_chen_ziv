@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define LINE_SIZE 8192
-#define BETA 0.5
+#define LINE_SIZE 8192 /* max length of an input line */
+#define BETA 0.5 /* beta in the H update rule */
 
 static int is_blank(const char *line);
 static int parse_values(char *line, double *values, int limit, int *count);
@@ -22,6 +22,7 @@ static double difference_squared(const Matrix *first, const Matrix *second);
 static int valid_goal(const char *goal);
 static Matrix *result_for_goal(const char *goal, const Matrix *points);
 
+/* Creates a matrix filled with zeros */
 Matrix *matrix_create(int rows, int cols)
 {
     Matrix *matrix;
@@ -31,6 +32,7 @@ Matrix *matrix_create(int rows, int cols)
         return NULL;
     }
     count = (size_t)rows * (size_t)cols;
+    /* guard against size overflow */
     if (count > (size_t)-1 / sizeof(double)) {
         return NULL;
     }
@@ -48,6 +50,7 @@ Matrix *matrix_create(int rows, int cols)
     return matrix;
 }
 
+/* Returns a new copy of the given matrix */
 Matrix *matrix_copy(const Matrix *source)
 {
     Matrix *copy;
@@ -65,6 +68,7 @@ Matrix *matrix_copy(const Matrix *source)
     return copy;
 }
 
+/* Frees a matrix and its data */
 void matrix_free(Matrix *matrix)
 {
     if (matrix != NULL) {
@@ -73,6 +77,7 @@ void matrix_free(Matrix *matrix)
     }
 }
 
+/* Check if a line is only whitesapce */
 static int is_blank(const char *line)
 {
     while (isspace((unsigned char)*line)) {
@@ -81,6 +86,7 @@ static int is_blank(const char *line)
     return *line == '\0';
 }
 
+/* Parses a  line of numbers into values and count it*/
 static int parse_values(char *line, double *values, int limit, int *count)
 {
     char *cursor;
@@ -120,6 +126,7 @@ static int parse_values(char *line, double *values, int limit, int *count)
     return column > 0;
 }
 
+/* Count rows and check all rows have the same length in the file */
 static int read_shape(FILE *file, int *rows, int *cols)
 {
     char line[LINE_SIZE];
@@ -149,6 +156,7 @@ static int read_shape(FILE *file, int *rows, int *cols)
     return 1;
 }
 
+/* Fill the matrix with the values */
 static int load_values(FILE *file, Matrix *matrix)
 {
     char line[LINE_SIZE];
@@ -172,6 +180,7 @@ static int load_values(FILE *file, Matrix *matrix)
     return !ferror(file) && row == matrix->rows;
 }
 
+/* Reads the data points file into a matrix */
 Matrix *read_points(const char *path)
 {
     FILE *file;
@@ -187,6 +196,7 @@ Matrix *read_points(const char *path)
         fclose(file);
         return NULL;
     }
+    /* go back to the start for the second pass */
     rewind(file);
     points = matrix_create(rows, cols);
     if (points == NULL || !load_values(file, points)) {
@@ -198,6 +208,7 @@ Matrix *read_points(const char *path)
     return points;
 }
 
+/* Squared Euclidean distance between two rows of points */
 static double squared_distance(const Matrix *points, int first, int second)
 {
     int column;
@@ -213,6 +224,7 @@ static double squared_distance(const Matrix *points, int first, int second)
     return distance;
 }
 
+/* Get similarity matrix */
 Matrix *calculate_sym(const Matrix *points)
 {
     Matrix *similarity;
@@ -227,6 +239,8 @@ Matrix *calculate_sym(const Matrix *points)
     if (similarity == NULL) {
         return NULL;
     }
+    /* A is symmetric, compute the upper triangle and mirror it.
+       The diagonal stays 0 from calloc */
     for (first = 0; first < points->rows; first++) {
         for (second = first + 1; second < points->rows; second++) {
             value = exp(-squared_distance(points, first, second) / 2.0);
@@ -237,6 +251,7 @@ Matrix *calculate_sym(const Matrix *points)
     return similarity;
 }
 
+/* Get degree of each row */
 static double *degrees_for(const Matrix *matrix)
 {
     double *degrees;
@@ -255,6 +270,7 @@ static double *degrees_for(const Matrix *matrix)
     return degrees;
 }
 
+/* Calculate diagonal degree matrix D */
 Matrix *calculate_ddg(const Matrix *points)
 {
     Matrix *similarity;
@@ -282,6 +298,7 @@ Matrix *calculate_ddg(const Matrix *points)
     return degree;
 }
 
+/* calculate normalized similarity */
 Matrix *calculate_norm(const Matrix *points)
 {
     Matrix *similarity;
@@ -304,6 +321,7 @@ Matrix *calculate_norm(const Matrix *points)
     }
     for (row = 0; row < normalized->rows; row++) {
         for (column = 0; column < normalized->cols; column++) {
+            /* avoid division by zero */
             if (degrees[row] > 0.0 && degrees[column] > 0.0) {
                 normalized->data[row * normalized->cols + column] =
                     similarity->data[row * similarity->cols + column]
@@ -316,6 +334,7 @@ Matrix *calculate_norm(const Matrix *points)
     return normalized;
 }
 
+/* Caculate left * right */
 static Matrix *matrix_product(const Matrix *left, const Matrix *right)
 {
     Matrix *result;
@@ -342,6 +361,7 @@ static Matrix *matrix_product(const Matrix *left, const Matrix *right)
     return result;
 }
 
+/* Get transpose of the matrix */
 static Matrix *matrix_transpose(const Matrix *matrix)
 {
     Matrix *transpose;
@@ -361,6 +381,8 @@ static Matrix *matrix_transpose(const Matrix *matrix)
     return transpose;
 }
 
+/* One update step:
+   H_new = H * (1 - beta + beta * (W H) / (H H^T H)), element-wise */
 static Matrix *update_h(const Matrix *w, const Matrix *h)
 {
     Matrix *wh;
@@ -371,6 +393,7 @@ static Matrix *update_h(const Matrix *w, const Matrix *h)
     int row;
     int column;
 
+    /* numerator W H and denominator H (H^T H) */
     wh = matrix_product(w, h);
     ht = matrix_transpose(h);
     gram = matrix_product(ht, h);
@@ -402,6 +425,7 @@ static Matrix *update_h(const Matrix *w, const Matrix *h)
     return next;
 }
 
+/* Squared norm of (first - second) */
 static double difference_squared(const Matrix *first, const Matrix *second)
 {
     double difference;
@@ -416,6 +440,8 @@ static double difference_squared(const Matrix *first, const Matrix *second)
     return total;
 }
 
+/* Runs the SymNMF updates from initial_h until ||H_new - H||_F^2 < epsilon
+   or max_iter iterations, returns the final H */
 Matrix *symnmf(const Matrix *initial_h, const Matrix *w, int max_iter,
                double epsilon)
 {
@@ -448,6 +474,7 @@ Matrix *symnmf(const Matrix *initial_h, const Matrix *w, int max_iter,
     return current;
 }
 
+/* Prints the matrix */
 void print_matrix(const Matrix *matrix)
 {
     int row;
@@ -464,12 +491,14 @@ void print_matrix(const Matrix *matrix)
     }
 }
 
+/* The C program supports only sym, ddg and norm */
 static int valid_goal(const char *goal)
 {
     return strcmp(goal, "sym") == 0 || strcmp(goal, "ddg") == 0
         || strcmp(goal, "norm") == 0;
 }
 
+/* Calculates the matrix that matches the goal */
 static Matrix *result_for_goal(const char *goal, const Matrix *points)
 {
     if (strcmp(goal, "sym") == 0) {

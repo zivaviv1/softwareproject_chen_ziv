@@ -1,13 +1,11 @@
 CC = gcc
 CFLAGS = -ansi -Wall -Wextra -Werror -pedantic-errors
-LDLIBS = -lm
-TARGET = symnmf
 
-$(TARGET): symnmf.c symnmf.h
-	$(CC) $(CFLAGS) -o $(TARGET) symnmf.c $(LDLIBS)
+symnmf: symnmf.o
+	$(CC) -o symnmf symnmf.o -lm
+
+symnmf.o: symnmf.c symnmf.h
+	$(CC) $(CFLAGS) -c symnmf.c
 
 clean:
-	rm -f $(TARGET) symnmfmodule*.so
-	rm -rf build __pycache__
-
-.PHONY: clean
+	rm -f symnmf symnmf.o
