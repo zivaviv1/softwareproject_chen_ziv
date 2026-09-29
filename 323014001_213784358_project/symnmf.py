@@ -11,6 +11,16 @@ class InputError(Exception):
     pass
 
 
+def parse_args(args):
+    if len(args) != 4 or args[2] not in {"symnmf", "sym", "ddg", "norm"}:
+        raise InputError("An Error Has Occurred")
+
+    if not args[1].isdigit() or int(args[1]) <= 1:
+        raise InputError("Incorrect number of clusters!")
+
+    return int(args[1]), args[2], args[3]
+
+
 def _initialize_h(w, k):
     mean = float(np.mean(w))
     upper = 2 * np.sqrt(mean / k)
@@ -22,25 +32,11 @@ def _print_matrix(matrix):
         print(",".join(f"{float(value):.4f}" for value in row))
 
 
-def parse_args(args):
-    if len(args) != 4:
-        raise InputError("An Error Has Occurred")
-
-    k = int(args[1]) if args[1].isdigit() else -1
-    goal = args[2]
-    file_name = args[3]
-        
-    if goal not in {"symnmf", "sym", "ddg", "norm"} or k == -1 or k <= 1:
-        raise InputError("An Error Has Occurred")
-    
-    return k, goal, file_name
-
-
 def run_symnmf(k, goal, file_name):
     # Get the datapoints
     points = np.loadtxt(file_name, delimiter=",", dtype=float, ndmin=2)
     if k >= len(points):
-            raise InputError("An Error Has Occurred")
+            raise InputError("Incorrect number of clusters!")
     values = points.tolist()
 
     # Run according to goal
