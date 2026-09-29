@@ -224,7 +224,7 @@ static double squared_distance(const Matrix *points, int first, int second)
     return distance;
 }
 
-/* Get similarity matrix */
+/* Calculate similarity matrix */
 Matrix *calculate_sym(const Matrix *points)
 {
     Matrix *similarity;
@@ -334,7 +334,7 @@ Matrix *calculate_norm(const Matrix *points)
     return normalized;
 }
 
-/* Caculate left * right */
+/* Caculate product of thr matrix */
 static Matrix *matrix_product(const Matrix *left, const Matrix *right)
 {
     Matrix *result;
@@ -425,7 +425,7 @@ static Matrix *update_h(const Matrix *w, const Matrix *h)
     return next;
 }
 
-/* Squared norm of (first - second) */
+/* Squared norm of difference */
 static double difference_squared(const Matrix *first, const Matrix *second)
 {
     double difference;
@@ -491,7 +491,7 @@ void print_matrix(const Matrix *matrix)
     }
 }
 
-/* The C program supports only sym, ddg and norm */
+/* Check if valid goal */
 static int valid_goal(const char *goal)
 {
     return strcmp(goal, "sym") == 0 || strcmp(goal, "ddg") == 0
@@ -519,13 +519,16 @@ int main(int argc, char **argv)
         printf("An Error Has Occurred\n");
         return 1;
     }
+
     points = read_points(argv[2]);
     if (points == NULL) {
         printf("An Error Has Occurred\n");
         return 1;
     }
+
     result = result_for_goal(argv[1], points);
     matrix_free(points);
+    
     if (result == NULL) {
         printf("An Error Has Occurred\n");
         return 1;

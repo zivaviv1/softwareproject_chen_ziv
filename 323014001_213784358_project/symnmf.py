@@ -2,10 +2,10 @@ import sys
 import numpy as np
 import symnmfmodule
 
+np.random.seed(1234)
+
 EPSILON = 1e-4
 MAX_ITER = 300
-
-np.random.seed(1234)
 
 class InputError(Exception):
     pass
@@ -23,14 +23,16 @@ def _print_matrix(matrix):
 
 
 def parse_args(args):
+    # Check that we got exactly the number of arguments needed
     if len(args) != 4:
         raise InputError("An Error Has Occurred")
 
     k = int(args[1]) if args[1].isdigit() else -1
     goal = args[2]
     file_name = args[3]
-        
-    if goal not in {"symnmf", "sym", "ddg", "norm"} or k == -1 or k <= 1:
+
+    # make sure the arguments are correct
+    if goal not in {"symnmf", "sym", "ddg", "norm"} or k <= 1:
         raise InputError("An Error Has Occurred")
     
     return k, goal, file_name

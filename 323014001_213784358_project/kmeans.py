@@ -1,7 +1,7 @@
 """
-from HW1 (changed to not have main to call it from the analysis file and return the needed things)
+This is our code from HW1 
+Changed to not have main to call it from the analysis file and return the needed things
 """
-import sys
 
 def euclidean_distance(p, q):
     sum_sq = 0.0
